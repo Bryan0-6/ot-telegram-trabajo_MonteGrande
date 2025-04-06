@@ -1,0 +1,38 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+
+TOKEN = '7998278230:AAHijwk5udOaDAB_wvyt9a_m1ORKZqTrCCA'
+CHAT_ID = 6776556626
+URL = 'https://ar.computrabajo.com/trabajo-de-deposito-en-buenos-aires-gba-en-monte-grande'
+
+ultimo_trabajo = ""
+
+def obtener_trabajo():
+    response = requests.get(URL)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    trabajo = soup.find('a', class_='js-o-link fc_base')
+    if trabajo:
+        return trabajo.text.strip()
+    return None
+
+def enviar_mensaje(mensaje):
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+    data = {'chat_id': CHAT_ID, 'text': mensaje}
+    requests.post(url, data=data)
+
+# Bucle que corre siempre
+while True:
+    try:
+        trabajo = obtener_trabajo()
+        if trabajo and trabajo != ultimo_trabajo:
+            mensaje = f"Trabajo detectado: {trabajo}\n{URL}"
+            enviar_mensaje(mensaje)
+            print("[AVISO]", mensaje)
+            ultimo_trabajo = trabajo
+        else:
+            print("[SIN NOVEDADES]")
+    except Exception as e:
+        print("[ERROR]", e)
+
+    time.sleep(600)
